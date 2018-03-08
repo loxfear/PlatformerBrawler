@@ -33,7 +33,6 @@ namespace MultiplayerBasicExample
 
         private GameObject gameManagerObj;
         public Rigidbody pRigidbody;
-        //private Animator animator;
         private float speed;
         private float hSpeed;
         private float leftSpeed;
@@ -47,12 +46,19 @@ namespace MultiplayerBasicExample
         private bool notJumped;
         private bool ready;
         public Vector3 StartingPosition;
+
+        //spherecast
+        private float height;
+        private Vector3 Origin;
+        private Vector3 direction;
+        private float distanceToObstacle;
         Renderer cachedRenderer;
         
 
 
         void Start()
 		{
+            height = GetComponent<Collider>().bounds.size.y;
             ready = false;
             StartingPosition = transform.position;
             // animator = GetComponent<Animator>();
@@ -224,7 +230,18 @@ namespace MultiplayerBasicExample
                 }
 
 
-               // Vector2 movement = new Vector2(move * lerp * speed);
+                //check if the player is going to hit something
+                RaycastHit hit;
+                Origin = transform.position;
+                direction = transform.forward;
+                distanceToObstacle = 10;
+
+               
+                if (Physics.SphereCast(Origin, height / 3, direction, out hit, 10))
+                {
+                    distanceToObstacle = hit.distance;
+                }
+
 
 
                 //move right
@@ -268,7 +285,10 @@ namespace MultiplayerBasicExample
                 
 
                 //Move the Player
-                pRigidbody.AddForce(new Vector3(1, 0, 0) * thrust);
+                if(distanceToObstacle > 0.3)
+                {
+                    pRigidbody.AddForce(new Vector3(1, 0, 0) * thrust);
+                }
 
 
                 //--------------------------------------------------------------Movement----------------------------------------------------------------------------------
@@ -327,6 +347,14 @@ namespace MultiplayerBasicExample
 
 			return Color.white;
 		}
-	}
+
+        void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(Origin + direction * distanceToObstacle, height/3);
+
+        }
+    }
+
 }
 
