@@ -143,6 +143,10 @@ MonoBehaviour:
   PlayersReady: 0
   PlayersAlive: 0
   loaded: 0
+  player1Score: 0
+  player2Score: 0
+  player3Score: 0
+  player4Score: 0
 --- !u!114 &114873730591196744
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -154,13 +158,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53b0caccfab974dfca6ab05778c597ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 122304, guid: f40da56a855a34a2eba59fd21196ba67, type: 2}
+  playerPrefab: {fileID: 1679569405570616, guid: 61769589244586f489a5a711bc47698e,
+    type: 2}
   spawnPoints:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   playerPositions: []
+  joinRoom: 0
 --- !u!114 &114975483769054058
 MonoBehaviour:
   m_ObjectHideFlags: 1

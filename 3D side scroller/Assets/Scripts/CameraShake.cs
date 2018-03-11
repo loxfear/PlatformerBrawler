@@ -33,8 +33,6 @@ public class CameraShake : MonoBehaviour
 
     public IEnumerator cShake(float duration, float amount)
     {
-        float endTime = Time.time + duration;
-
         while (duration > 0)
         {
             transform.localPosition = _originalPos + Random.insideUnitSphere * amount;

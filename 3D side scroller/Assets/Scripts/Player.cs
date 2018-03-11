@@ -46,22 +46,28 @@ namespace MultiplayerBasicExample
         private bool notJumped;
         private bool ready;
         public Vector3 StartingPosition;
+        public bool grounded;
+        public bool obstacle;
 
         //spherecast
+        private CapsuleCollider Capsule;
         private float height;
         private Vector3 Origin;
         private Vector3 direction;
         private float distanceToObstacle;
+        private float distanceToGround;
         Renderer cachedRenderer;
-        
+        private Animator animator;
 
 
         void Start()
 		{
+            obstacle = false;
+            Capsule = GetComponent<CapsuleCollider>();
             height = GetComponent<Collider>().bounds.size.y;
             ready = false;
             StartingPosition = transform.position;
-            // animator = GetComponent<Animator>();
+            animator = GetComponent<Animator>();
             notJumped = true;
             pRigidbody = GetComponent<Rigidbody>();
             cachedRenderer = GetComponent<Renderer>();
@@ -85,6 +91,11 @@ namespace MultiplayerBasicExample
             //when floor is hit, jump is reset
             if (col.gameObject.tag == "Floor" )
             {
+                if(grounded == false)
+                {
+                    grounded = true;
+                    animator.Play("Landing", 0, 0.2f);
+                }
                 notJumped = true;
                 jumpAmount = 3;
                // animator.SetTrigger("Land");
@@ -195,12 +206,62 @@ namespace MultiplayerBasicExample
 
         void Update()
 		{
-			if (Device == null)
-			{
-				// If no controller set, just make it translucent white.
-				cachedRenderer.material.color = new Color( 1.0f, 1.0f, 1.0f, 0.2f );
-			}
-			else if (!Stunned)
+
+            //+ Capsule.center + Vector3.up * Capsule.height * 0.5F
+            RaycastHit hit;
+            Vector3 p1 = transform.position + new Vector3(0, Capsule.radius, 0);
+            Vector3 p2 = p1 + Vector3.up * (Capsule.height - Capsule.radius);
+            Origin = transform.position;
+            direction = transform.forward;
+            distanceToObstacle = 10;
+
+
+            //check if something is infront of the player
+            if (Physics.CapsuleCast(p1, p2, Capsule.radius - 0.1f, transform.forward, out hit, 10))
+            {
+                distanceToObstacle = hit.distance;
+            }
+
+            //check the distance to the ground under the player
+            if (Physics.SphereCast(p1, Capsule.radius / 2, -transform.up, out hit, 10))
+            {
+                distanceToGround = hit.distance;
+            }
+
+            //check if grounded
+            if (distanceToGround > 1)
+            {
+                grounded = false;
+            }
+
+
+            //walking animations
+
+            if(!Stunned && grounded && !obstacle)
+            {
+                float deviceAmount = Device.Direction.X;
+                if (deviceAmount < 0)
+                {
+                    deviceAmount = -deviceAmount;
+                }
+                Debug.Log("ready ");
+                animator.SetFloat("Forward", deviceAmount);
+                if (Device.Direction.X > 0.1)
+                {
+                    animator.SetBool("running", true);
+                }
+                else if (Device.Direction.X < -0.1)
+                {
+                    animator.SetBool("running", true);
+                }
+                else
+                {
+                    animator.SetBool("running", false);
+                }
+            }
+
+
+			if (!Stunned)
 			{
                 if(Dead & Device.Action1.WasPressed)
                 {
@@ -209,7 +270,7 @@ namespace MultiplayerBasicExample
                     Dead = false;
                 }
 				// Set object material color based on which action is pressed.
-				cachedRenderer.material.color = GetColorFromInput();
+				//cachedRenderer.material.color = GetColorFromInput();
 
 
                 //--------------------------------------------------------------Movement----------------------------------------------------------------------------------
@@ -230,19 +291,7 @@ namespace MultiplayerBasicExample
                 }
 
 
-                //check if the player is going to hit something
-                RaycastHit hit;
-                Origin = transform.position;
-                direction = transform.forward;
-                distanceToObstacle = 10;
-
                
-                if (Physics.SphereCast(Origin, height / 3, direction, out hit, 10))
-                {
-                    distanceToObstacle = hit.distance;
-                }
-
-
 
                 //move right
                 if (Device.Direction.Right > 0)
@@ -255,8 +304,6 @@ namespace MultiplayerBasicExample
                         lerp = Mathf.Lerp(maxSpeed, 0f, t);
                     else if (t < 0f)
                         lerp = Mathf.Lerp(maxSpeed, 0f, Mathf.Abs(t));
-
-                        //Vector2 movement = new Vector2(move * lerp * speed);
 
                     thrust = Device.Direction.Right * lerp * runningSpeed;
                 }
@@ -272,8 +319,6 @@ namespace MultiplayerBasicExample
                     else if (t < 0f)
                         lerp = Mathf.Lerp(maxSpeed, 0f, Mathf.Abs(t));
 
-                    //Vector2 movement = new Vector2(move * lerp * speed);
-
                     thrust = -Device.Direction.Left * lerp * runningSpeed;
                 }
                 else
@@ -282,10 +327,17 @@ namespace MultiplayerBasicExample
                 }
                 
                 
-                
+                if (distanceToObstacle > 0.3)
+                {
+                    obstacle = false;
+                }
+                else
+                {
+                    obstacle = true;
+                }
 
                 //Move the Player
-                if(distanceToObstacle > 0.3)
+                if(!obstacle)
                 {
                     pRigidbody.AddForce(new Vector3(1, 0, 0) * thrust);
                 }
@@ -305,6 +357,7 @@ namespace MultiplayerBasicExample
                 //Jump
                 if (Device.Action1.WasPressed & jumpAmount > 0)
                 {
+                    animator.Play("Jumping", 0, 0.5f);
                     pRigidbody.AddForce(Vector3.up * jumpSpeed);
                     jumpAmount -= 1;
                     notJumped = false;
@@ -350,8 +403,12 @@ namespace MultiplayerBasicExample
 
         void OnDrawGizmosSelected()
         {
+            Vector3 p1 = transform.position + Capsule.center + Vector3.up * Capsule.height * 0.5F;
+
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(Origin + direction * distanceToObstacle, height/3);
+            Gizmos.DrawWireSphere(p1 - transform.up * distanceToGround, Capsule.radius/2);
+            Gizmos.DrawWireSphere(p1 + transform.forward * distanceToObstacle, Capsule.radius);
+                //if (Physics.CapsuleCast(p1, p2, Capsule.radius, transform.forward, out hit, 10))
 
         }
     }

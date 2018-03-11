@@ -1735,6 +1735,11 @@ Prefab:
       propertyPath: m_Name
       value: ReadyPlatform (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 114536916363436854, guid: a9addc4ab7a6b2347bb8c8d915e050df,
+        type: 2}
+      propertyPath: maximum
+      value: 0.1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a9addc4ab7a6b2347bb8c8d915e050df, type: 2}
   m_IsPrefabParent: 0

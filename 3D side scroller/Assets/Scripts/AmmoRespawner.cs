@@ -9,7 +9,7 @@ public class AmmoRespawner : MonoBehaviour {
     private bool counterStarted;
     private Renderer ammoRenderer;
     private Collider ammoCollider;
-    private GameObject ammoGameObject;
+
 
         //Respawning
         IEnumerator Respawn()
@@ -23,7 +23,6 @@ public class AmmoRespawner : MonoBehaviour {
     // Use this for initialization
     void Start () {
         counterStarted = false;
-        ammoGameObject = this.gameObject;
         ammoCollider = GetComponent<Collider>();
         ammoRenderer = GetComponent<Renderer>();
     }
